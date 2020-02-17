@@ -459,6 +459,11 @@ func StartSlave(instanceKey *InstanceKey) (*Instance, error) {
 	}
 
 	_, err = ExecInstance(instanceKey, `start slave`)
+	if err != nil && instance.UsingOracleGTID && strings.Contains(err.Error(), Error1201CouldnotInitializeMasterInfoStructure) {
+		log.Debugf("StartSlave: got %+v", err)
+		workaroundBug83713(instanceKey)
+		_, err = ExecInstance(instanceKey, `start slave`)
+	}
 	if err != nil {
 		return instance, log.Errore(err)
 	}
